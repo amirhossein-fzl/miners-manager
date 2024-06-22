@@ -1,24 +1,27 @@
 use crate::utils::timedate;
 use serde::{Deserialize, Serialize};
-use xmlrpc::Request;
 use std::cmp::max;
+use xmlrpc::Request;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Process {
-    name: String,
-    state: String,
-    process_name: String,
-    pid: i32,
-    uptime: String,
+    pub name: String,
+    pub state: String,
+    pub process_name: String,
+    pub pid: i32,
+    pub uptime: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct SupervisorService {
     server_url: String,
 }
 
 impl SupervisorService {
-    pub fn new(server_url: String) -> Self {
-        SupervisorService { server_url }
+    pub fn new() -> Self {
+        SupervisorService {
+            server_url: std::env::var("SUPERVISOR_URL").unwrap(),
+        }
     }
 
     pub fn process_list(&self) -> Vec<Process> {
@@ -57,7 +60,6 @@ impl SupervisorService {
 
         response
     }
-
     pub fn start_process(&self, process_name: String) -> bool {
         let request = Request::new("supervisor.startProcessGroup").arg(process_name.clone());
         let response = request.call_url(&self.server_url);
@@ -125,7 +127,7 @@ impl SupervisorService {
     }
 
     pub fn reload_supervisor(&self) -> bool {
-        let request = Request::new("supervisor.startProcess");
+        let request = Request::new("supervisor.reloadConfig");
         let response = request.call_url(&self.server_url);
 
         match response {
